@@ -66,6 +66,7 @@ export default class ForceGraph extends PureComponent {
       labelAttr: PropTypes.string,
       labelOffset: PropTypes.objectOf(PropTypes.func),
       showLabels: PropTypes.bool,
+      renderLabel: PropTypes.func,
     };
   }
 
@@ -82,6 +83,20 @@ export default class ForceGraph extends PureComponent {
       },
       showLabels: false,
       zoomOptions: {},
+      renderLabel: (node, nodePosition, labelAttr, labelClass, labelOffset, labelStyle) => {
+        const { fontSize, ...spreadableLabelStyle } = labelStyle;
+        return (
+          <text
+            className={`rv-force__label ${labelClass}`}
+            key={`${forceUtils.nodeId(node)}-label`}
+            x={nodePosition.cx + labelOffset.x(node)}
+            y={nodePosition.cy + labelOffset.y(node)}
+            fontSize={this.scale(fontSize)}
+            style={spreadableLabelStyle}
+          >
+            {node[labelAttr]}
+          </text>);
+      }
     };
   }
 
@@ -154,6 +169,8 @@ export default class ForceGraph extends PureComponent {
       scale: 1,
     };
 
+    this.renderLabel = props.renderLabel;
+
     this.bindSimulationTick();
   }
 
@@ -177,13 +194,13 @@ export default class ForceGraph extends PureComponent {
   }
 
   onZoom(event, scale, ...args) {
-    const { zoomOptions: { onZoom: _onZoom = () => {} } } = this.props;
+    const { zoomOptions: { onZoom: _onZoom = () => { } } } = this.props;
     _onZoom(event, scale, ...args);
     this.setState({ scale });
   }
 
   onPan(...args) {
-    const { zoomOptions: { onPan: _onPan = () => {} } } = this.props;
+    const { zoomOptions: { onPan: _onPan = () => { } } } = this.props;
     _onPan(...args);
   }
 
@@ -282,19 +299,7 @@ export default class ForceGraph extends PureComponent {
         }));
 
         if ((showLabels || showLabel) && nodePosition) {
-          const { fontSize, ...spreadableLabelStyle } = labelStyle;
-          labelElements.push(
-            <text
-              className={`rv-force__label ${labelClass}`}
-              key={`${forceUtils.nodeId(node)}-label`}
-              x={nodePosition.cx + labelOffset.x(node)}
-              y={nodePosition.cy + labelOffset.y(node)}
-              fontSize={this.scale(fontSize)}
-              style={spreadableLabelStyle}
-            >
-              {node[labelAttr]}
-            </text>
-          );
+          labelElements.push(this.renderLabel(node, nodePosition, labelAttr, labelClass, labelOffset, labelStyle));
         }
       } else if (isLink(child)) {
         const { link } = child.props;
