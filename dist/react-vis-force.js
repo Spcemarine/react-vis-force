@@ -580,12 +580,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // adjust label display
 	        labelAttr: _propTypes2.default.string,
 	        labelOffset: _propTypes2.default.objectOf(_propTypes2.default.func),
-	        showLabels: _propTypes2.default.bool
+	        showLabels: _propTypes2.default.bool,
+	        renderLabel: _propTypes2.default.func
 	      };
 	    }
 	  }, {
 	    key: 'defaultProps',
 	    get: function get() {
+	      var _this2 = this;
+	
 	      return {
 	        createSimulation: forceUtils.createSimulation,
 	        updateSimulation: forceUtils.updateSimulation,
@@ -605,7 +608,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	        },
 	        showLabels: false,
-	        zoomOptions: {}
+	        zoomOptions: {},
+	        renderLabel: function renderLabel(node, nodePosition, labelAttr, labelClass, labelOffset, labelStyle) {
+	          var fontSize = labelStyle.fontSize,
+	              spreadableLabelStyle = _objectWithoutProperties(labelStyle, ['fontSize']);
+	
+	          return _react2.default.createElement(
+	            'text',
+	            {
+	              className: 'rv-force__label ' + labelClass,
+	              key: forceUtils.nodeId(node) + '-label',
+	              x: nodePosition.cx + labelOffset.x(node),
+	              y: nodePosition.cy + labelOffset.y(node),
+	              fontSize: _this2.scale(fontSize),
+	              style: spreadableLabelStyle
+	            },
+	            node[labelAttr]
+	          );
+	        }
 	      };
 	    }
 	  }]);
@@ -630,6 +650,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      nodePositions: {},
 	      scale: 1
 	    };
+	
+	    _this.renderLabel = props.renderLabel;
 	
 	    _this.bindSimulationTick();
 	    return _this;
@@ -735,7 +757,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this2 = this;
+	      var _this3 = this;
 	
 	      var _props = this.props,
 	          children = _props.children,
@@ -782,26 +804,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	          var nodePosition = nodePositions[forceUtils.nodeId(node)];
 	
 	          nodeElements.push((0, _react.cloneElement)(child, _extends({}, nodePosition, {
-	            scale: _this2.state.scale,
-	            strokeWidth: _this2.scale(strokeWidth)
+	            scale: _this3.state.scale,
+	            strokeWidth: _this3.scale(strokeWidth)
 	          })));
 	
 	          if ((showLabels || showLabel) && nodePosition) {
-	            var fontSize = labelStyle.fontSize,
-	                spreadableLabelStyle = _objectWithoutProperties(labelStyle, ['fontSize']);
-	
-	            labelElements.push(_react2.default.createElement(
-	              'text',
-	              {
-	                className: 'rv-force__label ' + labelClass,
-	                key: forceUtils.nodeId(node) + '-label',
-	                x: nodePosition.cx + labelOffset.x(node),
-	                y: nodePosition.cy + labelOffset.y(node),
-	                fontSize: _this2.scale(fontSize),
-	                style: spreadableLabelStyle
-	              },
-	              node[labelAttr]
-	            ));
+	            labelElements.push(_this3.renderLabel(node, nodePosition, labelAttr, labelClass, labelOffset, labelStyle));
 	          }
 	        } else if (isLink(child)) {
 	          var link = child.props.link;
@@ -810,7 +818,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          var linkPosition = linkPositions[forceUtils.linkId(link)];
 	
 	          linkElements.push((0, _react.cloneElement)(child, _extends({}, linkPosition, {
-	            strokeWidth: _this2.scale(_strokeWidth)
+	            strokeWidth: _this3.scale(_strokeWidth)
 	          })));
 	        } else {
 	          var zoomable = child.props.zoomable;
@@ -839,10 +847,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            width: maxPanWidth
 	          }, zoomOptions, {
 	            onZoom: function onZoom() {
-	              return _this2.onZoom.apply(_this2, arguments);
+	              return _this3.onZoom.apply(_this3, arguments);
 	            },
 	            onPan: function onPan() {
-	              return _this2.onPan.apply(_this2, arguments);
+	              return _this3.onPan.apply(_this3, arguments);
 	            }
 	          }),
 	          _react2.default.createElement(
